@@ -407,7 +407,7 @@ defineExpose({
   padding: 0.5rem;
   cursor: pointer;
   color: var(--text);
-  display: flex;
+  display: none; /* 桌面端默认隐藏 */
   align-items: center;
   justify-content: center;
   transition: var(--transition);
@@ -546,6 +546,11 @@ defineExpose({
 
 /* Mobile optimization */
 @media (max-width: 768px) {
+  /* 移动端显示汉堡菜单按钮 */
+  .menu-toggle {
+    display: flex;
+  }
+  
   .settings-page {
     padding: 0;
   }

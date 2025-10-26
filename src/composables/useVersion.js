@@ -1,7 +1,7 @@
 import { ref, onMounted, computed } from 'vue'
 
 // 当前版本（从 package.json 获取）
-const CURRENT_VERSION = '1.2.0'
+const CURRENT_VERSION = '1.2.1'
 
 // 响应式状态
 const latestVersion = ref(null)
