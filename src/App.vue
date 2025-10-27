@@ -5,17 +5,26 @@
       <div class="header-content">
         <h1 class="app-title">{{ customTitle }}</h1>
         
-        <!-- 汉堡菜单按钮 -->
-        <button class="mobile-menu-btn" @click.stop="showMobileMenu = !showMobileMenu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M3 12h18M3 6h18M3 18h18"/>
-          </svg>
+        <!-- 未登录状态：直接显示登录按钮 -->
+        <button 
+          v-if="!isAuthenticated"
+          class="btn btn-primary"
+          @click="loginModal.open(); showMobileMenu = false"
+        >
+          登录
         </button>
         
-        <!-- 桌面端/移动端展开的操作按钮 -->
-        <div class="header-actions" :class="{ 'mobile-menu-open': showMobileMenu }">
-          <!-- Admin Controls in Header -->
-          <template v-if="isAuthenticated">
+        <!-- 已登录状态：显示汉堡菜单按钮 -->
+        <template v-else>
+          <button class="mobile-menu-btn" @click.stop="showMobileMenu = !showMobileMenu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 12h18M3 6h18M3 18h18"/>
+            </svg>
+          </button>
+          
+          <!-- 桌面端/移动端展开的操作按钮 -->
+          <div class="header-actions" :class="{ 'mobile-menu-open': showMobileMenu }">
+            <!-- Admin Controls in Header -->
             <button 
               class="btn btn-secondary"
               @click="settingsPage.open(); showMobileMenu = false"
@@ -38,23 +47,15 @@
               </svg>
               <span>{{ isEditMode ? '完成' : '编辑' }}</span>
             </button>
-          </template>
-          
-          <button 
-            v-if="!isAuthenticated" 
-            class="btn btn-primary"
-            @click="loginModal.open(); showMobileMenu = false"
-          >
-            登录
-          </button>
-          <button 
-            v-else 
-            class="btn btn-secondary"
-            @click="handleLogout(); showMobileMenu = false"
-          >
-            退出
-          </button>
-        </div>
+            
+            <button 
+              class="btn btn-secondary"
+              @click="handleLogout(); showMobileMenu = false"
+            >
+              退出
+            </button>
+          </div>
+        </template>
       </div>
       
       <div v-if="showSearch" class="header-search">
@@ -156,6 +157,7 @@
     <!-- Settings Page -->
     <SettingsPage 
       ref="settingsPage"
+      :theme-mode="themeMode"
       :is-dark="isDark"
       :bookmarks="bookmarks"
       :show-search="showSearch"
@@ -165,7 +167,7 @@
       :footer-content="footerContent"
       :active-settings-tab="activeSettingsTab"
       @action="handleSettingsAction"
-      @toggle-theme="toggleTheme"
+      @set-theme-mode="setThemeMode"
       @toggle-search="toggleSearch"
       @toggle-hide-empty="toggleHideEmptyCategories"
       @toggle-public-mode="togglePublicMode"
@@ -219,7 +221,7 @@ const {
   deleteBookmark,
   reorderItems
 } = useBookmarks()
-const { isDark, toggleTheme, loadThemeFromDB } = useTheme()
+const { themeMode, isDark, setThemeMode, toggleTheme, loadThemeFromDB } = useTheme()
 const { showSearch, hideEmptyCategories, customTitle, footerContent, activeSettingsTab, publicMode, toggleSearch, toggleHideEmptyCategories, togglePublicMode, updateCustomTitle, updateFooterContent, setActiveSettingsTab, loadSettingsFromDB } = useSettings()
 const { setToastInstance, success: toastSuccess, error: toastError } = useToast()
 

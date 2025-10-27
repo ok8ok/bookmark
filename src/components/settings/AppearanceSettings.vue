@@ -35,10 +35,22 @@
     <div class="form-group">
       <label class="form-label">主题模式</label>
       <div class="form-row">
-        <span class="form-text">{{ isDark ? '暗色模式' : '亮色模式' }}</span>
-        <button class="btn btn-primary" @click="$emit('toggleTheme')">
-          {{ isDark ? '切换到亮色' : '切换到暗色' }}
-        </button>
+        <select 
+          class="form-select"
+          :value="themeMode"
+          @change="handleThemeChange"
+        >
+          <option value="light">🌞 亮色模式</option>
+          <option value="dark">🌙 暗色模式</option>
+          <option value="system">💻 跟随系统</option>
+        </select>
+      </div>
+      <div class="form-hint">
+        {{ 
+          themeMode === 'light' ? '使用亮色主题' : 
+          themeMode === 'dark' ? '使用暗色主题' : 
+          '根据系统设置自动切换主题'
+        }}
       </div>
     </div>
     
@@ -98,7 +110,8 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
+  themeMode: String,
   isDark: Boolean,
   showSearch: Boolean,
   hideEmptyCategories: Boolean,
@@ -107,7 +120,11 @@ defineProps({
   footerContent: String
 })
 
-defineEmits(['editTitle', 'editFooter', 'toggleTheme', 'toggleSearch', 'toggleHideEmpty', 'togglePublicMode'])
+const emit = defineEmits(['editTitle', 'editFooter', 'setThemeMode', 'toggleSearch', 'toggleHideEmpty', 'togglePublicMode'])
+
+const handleThemeChange = (event) => {
+  emit('setThemeMode', event.target.value)
+}
 </script>
 
 <style scoped>
@@ -207,6 +224,30 @@ defineEmits(['editTitle', 'editFooter', 'toggleTheme', 'toggleSearch', 'toggleHi
   background: var(--bg-tertiary);
   color: var(--text-secondary);
   cursor: not-allowed;
+}
+
+.form-select {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--text-sm);
+  transition: var(--transition);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .form-text {
