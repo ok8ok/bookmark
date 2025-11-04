@@ -7,6 +7,8 @@ const customTitle = ref(localStorage.getItem('customTitle') || '📚 书签管�
 const footerContent = ref(localStorage.getItem('footerContent') || '<p>Made with ❤️ using <a href="https://github.com/deerwan/nav" target="_blank">Vue 3 and Cloudflare</a></p>')
 const activeSettingsTab = ref(localStorage.getItem('activeSettingsTab') || 'appearance')
 const publicMode = ref(localStorage.getItem('publicMode') !== 'false')
+const randomWallpaper = ref(localStorage.getItem('randomWallpaper') === 'true')
+const wallpaperApi = ref(localStorage.getItem('wallpaperApi') || '')
 
 // 加载标志位，避免循环触发
 const isLoadingFromDB = ref(false)
@@ -49,6 +51,14 @@ export function useSettings() {
           if (data.data.publicMode !== undefined) {
             publicMode.value = data.data.publicMode === 'true'
             localStorage.setItem('publicMode', data.data.publicMode)
+          }
+          if (data.data.randomWallpaper !== undefined) {
+            randomWallpaper.value = data.data.randomWallpaper === 'true'
+            localStorage.setItem('randomWallpaper', data.data.randomWallpaper)
+          }
+          if (data.data.wallpaperApi) {
+            wallpaperApi.value = data.data.wallpaperApi
+            localStorage.setItem('wallpaperApi', data.data.wallpaperApi)
           }
         }
       }
@@ -125,6 +135,77 @@ export function useSettings() {
     localStorage.setItem('publicMode', publicMode.value.toString())
     
     await saveSettingsToDB({ publicMode: publicMode.value.toString() })
+  }
+  
+  const toggleRandomWallpaper = async () => {
+    randomWallpaper.value = !randomWallpaper.value
+    localStorage.setItem('randomWallpaper', randomWallpaper.value.toString())
+    
+    await saveSettingsToDB({ randomWallpaper: randomWallpaper.value.toString() })
+    
+    // 如果启用壁纸，立即应用
+    if (randomWallpaper.value) {
+      applyWallpaper()
+    } else {
+      removeWallpaper()
+    }
+  }
+  
+  const updateWallpaperApi = async (apiUrl) => {
+    wallpaperApi.value = apiUrl || ''
+    localStorage.setItem('wallpaperApi', wallpaperApi.value)
+    
+    await saveSettingsToDB({ wallpaperApi: wallpaperApi.value })
+    
+    // 如果壁纸已启用，重新应用
+    if (randomWallpaper.value && wallpaperApi.value) {
+      applyWallpaper()
+    } else if (randomWallpaper.value && !wallpaperApi.value) {
+      removeWallpaper()
+    }
+  }
+  
+  // 应用随机壁纸
+  const applyWallpaper = () => {
+    if (!randomWallpaper.value || !wallpaperApi.value) {
+      removeWallpaper()
+      return
+    }
+    
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    
+    // 添加时间戳防止缓存
+    const apiUrl = `${wallpaperApi.value}${wallpaperApi.value.includes('?') ? '&' : '?'}_t=${Date.now()}`
+    
+    img.onload = () => {
+      document.body.style.backgroundImage = `url(${img.src})`
+      document.body.style.backgroundSize = 'cover'
+      document.body.style.backgroundPosition = 'center'
+      document.body.style.backgroundRepeat = 'no-repeat'
+      document.body.style.backgroundAttachment = 'fixed'
+      // 添加遮罩层类
+      document.body.classList.add('has-wallpaper')
+    }
+    
+    img.onerror = () => {
+      console.warn('Failed to load wallpaper from API:', wallpaperApi.value)
+      // 如果加载失败，使用默认背景
+      removeWallpaper()
+    }
+    
+    img.src = apiUrl
+  }
+  
+  // 移除壁纸
+  const removeWallpaper = () => {
+    document.body.style.backgroundImage = ''
+    document.body.style.backgroundSize = ''
+    document.body.style.backgroundPosition = ''
+    document.body.style.backgroundRepeat = ''
+    document.body.style.backgroundAttachment = ''
+    // 移除遮罩层类
+    document.body.classList.remove('has-wallpaper')
   }
   
   watch(showSearch, async (newValue) => {
@@ -236,6 +317,42 @@ export function useSettings() {
     }
   })
   
+  watch(randomWallpaper, async (newValue) => {
+    if (!isLoadingFromDB.value) {
+      localStorage.setItem('randomWallpaper', newValue.toString())
+      if (isAuthenticated.value) {
+        try {
+          await apiRequest('/api/settings', {
+            method: 'POST',
+            body: JSON.stringify({ settings: { randomWallpaper: newValue.toString() } })
+          })
+        } catch (error) {
+          if (error.message === 'Token expired') {
+            console.warn('Token expired, randomWallpaper not saved to database')
+          }
+        }
+      }
+    }
+  })
+  
+  watch(wallpaperApi, async (newValue) => {
+    if (!isLoadingFromDB.value) {
+      localStorage.setItem('wallpaperApi', newValue)
+      if (isAuthenticated.value) {
+        try {
+          await apiRequest('/api/settings', {
+            method: 'POST',
+            body: JSON.stringify({ settings: { wallpaperApi: newValue } })
+          })
+        } catch (error) {
+          if (error.message === 'Token expired') {
+            console.warn('Token expired, wallpaperApi not saved to database')
+          }
+        }
+      }
+    }
+  })
+  
   return {
     showSearch,
     hideEmptyCategories,
@@ -243,12 +360,18 @@ export function useSettings() {
     footerContent,
     activeSettingsTab,
     publicMode,
+    randomWallpaper,
+    wallpaperApi,
     toggleSearch,
     toggleHideEmptyCategories,
     updateCustomTitle,
     updateFooterContent,
     setActiveSettingsTab,
     togglePublicMode,
+    toggleRandomWallpaper,
+    updateWallpaperApi,
+    applyWallpaper,
+    removeWallpaper,
     loadSettingsFromDB
   }
 }

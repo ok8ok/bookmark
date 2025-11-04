@@ -82,6 +82,8 @@
               @toggleSearch="$emit('toggleSearch')"
               @toggleHideEmpty="$emit('toggleHideEmpty')"
               @togglePublicMode="$emit('togglePublicMode')"
+              @toggleRandomWallpaper="$emit('toggleRandomWallpaper')"
+              @updateWallpaperApi="$emit('updateWallpaperApi', $event)"
             />
           </div>
         </div>
@@ -132,10 +134,22 @@ const props = defineProps({
   activeSettingsTab: {
     type: String,
     default: 'appearance'
+  },
+  emptyCategoryCount: {
+    type: Number,
+    default: 0
+  },
+  randomWallpaper: {
+    type: Boolean,
+    default: false
+  },
+  wallpaperApi: {
+    type: String,
+    default: ''
   }
 })
 
-const emit = defineEmits(['action', 'close', 'setThemeMode', 'toggleSearch', 'toggleHideEmpty', 'togglePublicMode', 'updateTitle', 'updateFooter', 'editTitle', 'editFooter', 'setActiveTab'])
+const emit = defineEmits(['action', 'close', 'setThemeMode', 'toggleSearch', 'toggleHideEmpty', 'togglePublicMode', 'updateTitle', 'updateFooter', 'editTitle', 'editFooter', 'setActiveTab', 'toggleRandomWallpaper', 'updateWallpaperApi'])
 
 const menuItems = ref([
   { id: 'appearance', name: '外观设置', icon: '🎨' },
@@ -166,9 +180,12 @@ const componentProps = computed(() => ({
   hideEmptyCategories: props.hideEmptyCategories,
   publicMode: props.publicMode,
   customTitle: props.customTitle,
+  randomWallpaper: props.randomWallpaper,
+  wallpaperApi: props.wallpaperApi,
   footerContent: props.footerContent,
   totalBookmarks: totalBookmarks.value,
-  privateBookmarks: privateBookmarks.value
+  privateBookmarks: privateBookmarks.value,
+  emptyCategoryCount: props.emptyCategoryCount
 }))
 
 const open = () => {
@@ -322,8 +339,9 @@ defineExpose({
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 3000;
   display: flex;
   align-items: center;
@@ -335,20 +353,26 @@ defineExpose({
 }
 
 .settings-container {
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--radius-lg);
-  box-shadow: 0 25px 50px var(--shadow-xl);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 1200px;
   height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--border);
-  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   /* 确保容器内的滚动不会影响外部 */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+html.dark .settings-container {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Header */
@@ -357,15 +381,16 @@ defineExpose({
   align-items: center;
   justify-content: space-between;
   padding: var(--space-6) var(--space-8);
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   flex-shrink: 0;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.dark .settings-header {
-  background: rgba(15, 23, 42, 0.8);
+html.dark .settings-header {
+  background: rgba(15, 23, 42, 0.75);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 .back-btn {
@@ -443,12 +468,18 @@ defineExpose({
 /* Sidebar */
 .settings-sidebar {
   width: 320px;
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
   padding: var(--space-6) 0;
   overflow-y: auto;
   transition: var(--transition);
-  backdrop-filter: blur(10px);
+}
+
+html.dark .settings-sidebar {
+  background: rgba(30, 41, 59, 0.7);
+  border-right-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-menu {
@@ -515,7 +546,7 @@ defineExpose({
   flex: 1;
   padding: var(--space-8);
   overflow-y: auto;
-  background: var(--bg);
+  background: transparent;
   position: relative;
   /* 优化滚动体验 */
   overscroll-behavior: contain;
@@ -580,15 +611,17 @@ defineExpose({
     height: 100%;
     z-index: 10;
     transform: translateX(-100%);
-    border-right: 1px solid var(--border);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
     border-bottom: none;
     padding: var(--space-6) 0;
-    backdrop-filter: blur(20px);
-    background: rgba(248, 250, 252, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.7);
   }
   
-  .dark .settings-sidebar {
-    background: rgba(30, 41, 59, 0.95);
+  html.dark .settings-sidebar {
+    background: rgba(30, 41, 59, 0.7);
+    border-right-color: rgba(255, 255, 255, 0.1);
   }
   
   .settings-sidebar.sidebar-open {

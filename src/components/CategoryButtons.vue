@@ -1,23 +1,35 @@
 <template>
-  <div v-if="categories.length" class="category-buttons">
+  <div v-if="categoryOptions.length" class="category-buttons">
     <button 
-      v-for="category in categories" 
+      v-for="category in categoryOptions" 
       :key="category.id"
       class="category-btn"
       :class="{ active: activeCategory === category.id }"
       @click="scrollToCategory(category.id)"
     >
-      {{ category.name }}
+      {{ category.displayName }}
     </button>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useBookmarks } from '../composables/useBookmarks'
+import { buildCategoryTree, getCategoryPath } from '../utils/categoryTree'
 
 const { categories } = useBookmarks()
 const activeCategory = ref(null)
+
+const categoryOptions = computed(() => {
+  if (!categories.value.length) {
+    return []
+  }
+  const { flatList, map } = buildCategoryTree(categories.value)
+  return flatList.map(cat => ({
+    id: cat.id,
+    displayName: getCategoryPath(cat.id, map).map(item => item.name).join('/')
+  }))
+})
 
 const scrollToCategory = (categoryId) => {
   const element = document.getElementById(`category-${categoryId}`)

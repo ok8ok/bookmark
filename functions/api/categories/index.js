@@ -1,4 +1,4 @@
-// GET all categories
+// GET all categories with tree structure
 export async function onRequestGet(context) {
   const { env, request } = context;
   
@@ -22,8 +22,9 @@ export async function onRequestGet(context) {
       });
     }
     
+    // 获取所有分类（包含parent_id和depth）
     const { results } = await env.DB.prepare(`
-      SELECT * FROM categories ORDER BY position
+      SELECT * FROM categories ORDER BY depth, position
     `).all();
     
     return new Response(JSON.stringify({ data: results }), {
@@ -38,23 +39,50 @@ export async function onRequestGet(context) {
   }
 }
 
-// POST create category
+// POST create category (with optional parent_id for nested structure)
 export async function onRequestPost(context) {
   const { request, env } = context;
   
   try {
-    const { name } = await request.json();
+    const { name, parent_id } = await request.json();
     
-    // 获取最大position
-    const { position: maxPosition } = await env.DB.prepare(
-      'SELECT COALESCE(MAX(position), -1) as position FROM categories'
-    ).first();
+    // 计算depth
+    let depth = 0;
+    if (parent_id) {
+      const parent = await env.DB.prepare(
+        'SELECT depth FROM categories WHERE id = ?'
+      ).bind(parent_id).first();
+      
+      if (!parent) {
+        return new Response(JSON.stringify({ error: 'Parent category not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
+      depth = parent.depth + 1;
+      
+      // 限制嵌套深度
+      if (depth > 5) {
+        return new Response(JSON.stringify({ error: 'Maximum nesting depth (5) exceeded' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    }
+    
+    // 获取同一父分类下的最大position
+    const whereClause = parent_id ? 'WHERE parent_id = ?' : 'WHERE parent_id IS NULL';
+    const query = `SELECT COALESCE(MAX(position), -1) as position FROM categories ${whereClause}`;
+    const { position: maxPosition } = parent_id 
+      ? await env.DB.prepare(query).bind(parent_id).first()
+      : await env.DB.prepare(query).first();
     
     const newPosition = (maxPosition || -1) + 1;
     
     const result = await env.DB.prepare(
-      'INSERT INTO categories (name, position) VALUES (?, ?)'
-    ).bind(name, newPosition).run();
+      'INSERT INTO categories (name, position, parent_id, depth) VALUES (?, ?, ?, ?)'
+    ).bind(name, newPosition, parent_id || null, depth).run();
     
     return new Response(JSON.stringify({
       success: true,

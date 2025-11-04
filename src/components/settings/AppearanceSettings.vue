@@ -106,10 +106,96 @@
         {{ publicMode ? '未登录用户可访问公开书签' : '未登录用户无法访问书签和分类' }}
       </div>
     </div>
+    
+    <!-- 随机壁纸 -->
+    <div class="form-group">
+      <label class="form-label">随机壁纸</label>
+      <div class="form-row">
+        <span class="form-text">{{ randomWallpaper ? '已开启' : '已关闭' }}</span>
+        <label class="switch">
+          <input 
+            type="checkbox" 
+            :checked="randomWallpaper"
+            @change="$emit('toggleRandomWallpaper')"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="form-hint">启用后会在页面背景显示随机壁纸</div>
+    </div>
+    
+    <!-- 壁纸API接口 -->
+    <div v-if="randomWallpaper" class="form-group">
+      <label class="form-label">壁纸API接口</label>
+      <div class="form-row">
+        <input 
+          type="text" 
+          :value="wallpaperApi || '未设置'" 
+          class="form-input" 
+          readonly
+        />
+        <button type="button" class="btn btn-secondary" @click="openDialog">
+          编辑
+        </button>
+      </div>
+      <div class="form-hint">自定义随机壁纸API接口地址（留空则不显示壁纸）</div>
+    </div>
+    
+    <!-- API接口编辑对话框 -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showApiDialog" class="dialog-overlay" @click="showApiDialog = false">
+          <div class="dialog-box api-dialog" @click.stop>
+            <h3 class="dialog-title">编辑壁纸API接口</h3>
+            
+            <div class="form-group">
+              <label>API接口地址 *</label>
+              <input 
+                v-model="apiInput" 
+                type="text" 
+                placeholder="请输入API接口地址，例如：https://api.example.com/wallpaper"
+                @keyup.enter="handleConfirm"
+                autofocus
+              >
+              <div class="form-hint">请输入返回图片URL的API接口地址</div>
+            </div>
+            
+            <div class="form-group">
+              <div class="example-apis">
+                <div class="example-title">示例接口（点击快速填入）：</div>
+                <button 
+                  type="button"
+                  class="example-btn" 
+                  @click="apiInput = 'https://api.paugram.com/wallpaper/'"
+                >
+                  Paugram 壁纸 API
+                </button>
+                <button 
+                  type="button"
+                  class="example-btn" 
+                  @click="apiInput = 'https://picsum.photos/1920/1080'"
+                >
+                  Lorem Picsum 随机图片
+                </button>
+              </div>
+            </div>
+            
+            <p v-if="error" class="error-message">{{ error }}</p>
+            
+            <div class="dialog-buttons">
+              <button class="btn btn-secondary" @click="handleCancel">取消</button>
+              <button class="btn btn-primary" @click="handleConfirm">确认</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
+import { ref, nextTick } from 'vue'
+
 const props = defineProps({
   themeMode: String,
   isDark: Boolean,
@@ -117,13 +203,75 @@ const props = defineProps({
   hideEmptyCategories: Boolean,
   publicMode: Boolean,
   customTitle: String,
-  footerContent: String
+  footerContent: String,
+  randomWallpaper: Boolean,
+  wallpaperApi: String
 })
 
-const emit = defineEmits(['editTitle', 'editFooter', 'setThemeMode', 'toggleSearch', 'toggleHideEmpty', 'togglePublicMode'])
+const emit = defineEmits([
+  'editTitle', 
+  'editFooter', 
+  'setThemeMode', 
+  'toggleSearch', 
+  'toggleHideEmpty', 
+  'togglePublicMode',
+  'toggleRandomWallpaper',
+  'updateWallpaperApi'
+])
+
+const showApiDialog = ref(false)
+const apiInput = ref('')
+const error = ref('')
 
 const handleThemeChange = (event) => {
   emit('setThemeMode', event.target.value)
+}
+
+const handleConfirm = () => {
+  error.value = ''
+  
+  const trimmedUrl = apiInput.value.trim()
+  
+  // 如果为空，也允许（用于清除API）
+  if (trimmedUrl === '') {
+    emit('updateWallpaperApi', '')
+    showApiDialog.value = false
+    return
+  }
+  
+  // 验证URL格式
+  try {
+    new URL(trimmedUrl)
+    emit('updateWallpaperApi', trimmedUrl)
+    showApiDialog.value = false
+  } catch {
+    error.value = '请输入有效的URL地址'
+  }
+}
+
+const handleCancel = () => {
+  apiInput.value = props.wallpaperApi || ''
+  error.value = ''
+  showApiDialog.value = false
+}
+
+// 打开对话框时初始化输入值
+const openDialog = (e) => {
+  if (e) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+  apiInput.value = props.wallpaperApi || ''
+  error.value = ''
+  showApiDialog.value = true
+  // 确保对话框显示
+  nextTick(() => {
+    const dialog = document.querySelector('.api-dialog')
+    if (dialog) {
+      const input = dialog.querySelector('input')
+      if (input) input.focus()
+    }
+  })
 }
 </script>
 
@@ -343,6 +491,138 @@ const handleThemeChange = (event) => {
   width: 60px;
   height: 32px;
   flex-shrink: 0;
+}
+</style>
+
+<!-- 对话框样式必须非 scoped，因为使用了 Teleport -->
+<style>
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.api-dialog {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 10001;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+html.dark .api-dialog {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.api-dialog .dialog-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+}
+
+.api-dialog .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.api-dialog .form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.api-dialog .form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  transition: var(--transition);
+}
+
+.api-dialog .form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.api-dialog .form-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+.api-dialog .dialog-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.api-dialog .example-apis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.api-dialog .example-title {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.api-dialog .example-btn {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+}
+
+.api-dialog .example-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.api-dialog .error-message {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* 淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .switch input {

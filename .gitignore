@@ -28,14 +28,3 @@ Thumbs.db
 # Wrangler
 .wrangler/
 wrangler.toml.backup
-
-# workers
-workers.js
-
-# Test files
-test-bookmarks.html
-test-bookmarks.json
-bookmarks_2025_10_22.html
-bookmarks_2025_10_22.json
-test-bookmarks-1000.html
-test-bookmarks.html

@@ -1,9 +1,12 @@
 -- Categories table
 CREATE TABLE IF NOT EXISTS categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
   position INTEGER NOT NULL DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  parent_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
+  depth INTEGER NOT NULL DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(name, parent_id)
 );
 
 -- Bookmarks table
@@ -40,6 +43,12 @@ ON bookmarks(is_private);
 
 CREATE INDEX IF NOT EXISTS idx_categories_position 
 ON categories(position);
+
+CREATE INDEX IF NOT EXISTS idx_categories_parent_id 
+ON categories(parent_id);
+
+CREATE INDEX IF NOT EXISTS idx_categories_parent_position 
+ON categories(parent_id, position);
 
 CREATE INDEX IF NOT EXISTS idx_settings_key 
 ON settings(key);

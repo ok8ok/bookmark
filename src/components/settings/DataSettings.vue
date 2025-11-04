@@ -22,6 +22,40 @@
       </button>
     </div>
     
+    <!-- 清理空分类 -->
+    <div class="form-group">
+      <div class="form-header">
+        <div class="form-icon cleanup-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="form-content">
+          <div class="form-title">清理空分类</div>
+          <div class="form-description">
+            <span v-if="emptyCategoryCount > 0">
+              发现 {{ emptyCategoryCount }} 个空分类，点击按钮清理
+            </span>
+            <span v-else>
+              当前没有空分类
+            </span>
+          </div>
+        </div>
+      </div>
+      <button 
+        class="btn" 
+        :class="emptyCategoryCount > 0 ? 'btn-warning' : 'btn-disabled'"
+        @click="$emit('action', 'cleanupEmptyCategories')"
+        :disabled="emptyCategoryCount === 0"
+      >
+        <svg v-if="emptyCategoryCount > 0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        {{ emptyCategoryCount > 0 ? '清理空分类' : '无空分类' }}
+      </button>
+    </div>
+    
     <!-- 统计信息 -->
     <div class="form-group stats-group">
       <div class="form-header">
@@ -45,7 +79,11 @@
 <script setup>
 defineProps({
   totalBookmarks: Number,
-  privateBookmarks: Number
+  privateBookmarks: Number,
+  emptyCategoryCount: {
+    type: Number,
+    default: 0
+  }
 })
 
 defineEmits(['action'])
@@ -226,5 +264,45 @@ defineEmits(['action'])
 .form-group:hover .stats-icon {
   transform: scale(1.05);
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.cleanup-icon {
+  background: var(--warning);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.form-group:hover .cleanup-icon {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+}
+
+.btn-warning {
+  background: var(--warning);
+  color: white;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.btn-disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
 }
 </style>
