@@ -17,15 +17,36 @@ export async function onRequestPost(context) {
     }
 
     const config = await getAIConfig(env)
-    const prompt = `You are an assistant that generates concise and helpful descriptions for bookmarks/websites.
+    
+    // 默认 Prompt
+    const defaultPrompt = `You are an assistant that generates concise and helpful descriptions for bookmarks/websites.
 
 Given the following bookmark information:
-Name: ${name}
-URL: ${url}
+Name: {name}
+URL: {url}
 
 Please generate a brief, useful description (1-2 sentences, max 100 words) that explains what this website/resource is about. The description should be clear, informative, and help users understand the purpose or content of the site.
 
 Language requirement: Respond in the same language as the bookmark name if it is clearly identifiable; otherwise, respond in Simplified Chinese. Return only the description text, without any additional formatting or quotes.`
+    
+    // 获取自定义 Prompt 配置和开关状态（优先使用描述专用提示词）
+    const settingsResults = await env.DB.prepare(
+      'SELECT key, value FROM settings WHERE key IN (?, ?)'
+    ).bind('ai_custom_prompt_description', 'ai_custom_prompt_description_enabled').all()
+    
+    const settings = {}
+    settingsResults.results.forEach(row => {
+      settings[row.key] = row.value
+    })
+    
+    const customPromptEnabled = settings.ai_custom_prompt_description_enabled === 'true'
+    const customPrompt = settings.ai_custom_prompt_description
+    const promptTemplate = (customPromptEnabled && customPrompt && customPrompt.trim()) ? customPrompt : defaultPrompt
+    
+    // 替换变量
+    const prompt = promptTemplate
+      .replace(/\{name\}/g, name)
+      .replace(/\{url\}/g, url)
 
     const response = await callOpenAI(env, {
       path: 'chat/completions',

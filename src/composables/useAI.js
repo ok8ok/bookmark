@@ -94,6 +94,31 @@ export function useAI() {
     }
   }
 
+  const batchClassify = async (bookmarks, categories) => {
+    try {
+      const response = await apiRequest('/api/ai/batch-classify', {
+        method: 'POST',
+        body: JSON.stringify({ bookmarks, categories })
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        return { 
+          success: true, 
+          results: result.results,
+          successCount: result.successCount,
+          failedCount: result.failedCount
+        }
+      }
+      return { success: false, error: result.error || '批量分类失败' }
+    } catch (error) {
+      if (error.message === 'Token expired') {
+        return { success: false, error: '登录已过期，请重新登录' }
+      }
+      return { success: false, error: '网络错误' }
+    }
+  }
+
   const saveAISettings = async (settings) => {
     try {
       const response = await apiRequest('/api/ai/settings', {
@@ -123,22 +148,26 @@ export function useAI() {
       
       const result = await response.json()
       if (result.success) {
-        aiApiKey.value = ''
+        aiApiKey.value = result.apiKey || ''
         aiBaseUrl.value = result.baseUrl || ''
         if (result.source) {
           aiSource.value = result.source
         }
         return { 
           success: true, 
-          apiKey: '',
+          apiKey: result.apiKey || '',
           baseUrl: result.baseUrl || 'https://api.openai.com/v1',
           model: result.model || 'gpt-4o-mini',
           authHeader: result.authHeader || 'Authorization',
           authPrefix: result.authPrefix !== undefined ? result.authPrefix : 'Bearer ',
           hasApiKey: !!result.hasApiKey,
-          hasStoredKey: !!result.hasStoredKey,
-          source: result.source || 'none',
-          canEditKey: result.canEditKey !== false
+          lockedFields: result.lockedFields || {},
+          customPromptEnabled: result.customPromptEnabled || false,
+          customPrompt: result.customPrompt || '',
+          customPromptDescriptionEnabled: result.customPromptDescriptionEnabled || false,
+          customPromptDescription: result.customPromptDescription || '',
+          customPromptCategoryEnabled: result.customPromptCategoryEnabled || false,
+          customPromptCategory: result.customPromptCategory || ''
         }
       }
       return { success: false, error: result.error || '获取失败' }
@@ -159,6 +188,7 @@ export function useAI() {
     generateDescription,
     suggestCategory,
     batchGenerateDescriptions,
+    batchClassify,
     saveAISettings,
     getAISettings
   }

@@ -33,32 +33,23 @@
             <label class="setting-label" for="ai-api-key">API Key</label>
             <span class="setting-hint">OpenAI API Key 或兼容服务的密钥</span>
           </div>
-          <div class="input-with-action">
-            <input
-              id="ai-api-key"
-              v-model="localApiKey"
-              :type="showApiKey ? 'text' : 'password'"
-              placeholder="sk-..."
-              class="setting-input"
-              :disabled="saving"
-            />
-            <button
-              type="button"
-              class="btn-icon"
-              @click="showApiKey = !showApiKey"
-              :title="showApiKey ? '隐藏' : '显示'"
-            >
-              <svg v-if="showApiKey" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-              </svg>
-              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
-          </div>
-          <p class="setting-note">
+          <input
+            id="ai-api-key"
+            v-model="localApiKey"
+            type="password"
+            placeholder="sk-..."
+            class="setting-input"
+            :disabled="saving || lockedFields.apiKey"
+          />
+          <p v-if="lockedFields.apiKey" class="setting-note setting-locked">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            此参数已通过环境变量 <code>OPENAI_API_KEY</code> 配置，无法在界面修改
+          </p>
+          <p v-else class="setting-note">
+            保存后不会显示 API Key，如需修改请重新输入完整密钥<br>
             也可以通过环境变量 <code>OPENAI_API_KEY</code> 配置（优先级更高）
           </p>
         </div>
@@ -74,9 +65,16 @@
             type="text"
             placeholder="https://api.openai.com/v1"
             class="setting-input"
-            :disabled="saving"
+            :disabled="saving || lockedFields.baseUrl"
           />
-          <p class="setting-note">
+          <p v-if="lockedFields.baseUrl" class="setting-note setting-locked">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            此参数已通过环境变量 <code>OPENAI_BASE_URL</code> 配置，无法在界面修改
+          </p>
+          <p v-else class="setting-note">
             支持 OpenAI 兼容服务（如 Azure OpenAI、Claude、Gemini 等）<br>
             环境变量：<code>OPENAI_BASE_URL</code>
           </p>
@@ -93,9 +91,16 @@
             type="text"
             placeholder="gpt-4o-mini"
             class="setting-input"
-            :disabled="saving"
+            :disabled="saving || lockedFields.model"
           />
-          <p class="setting-note">
+          <p v-if="lockedFields.model" class="setting-note setting-locked">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            此参数已通过环境变量 <code>OPENAI_MODEL</code> 配置，无法在界面修改
+          </p>
+          <p v-else class="setting-note">
             推荐：gpt-4o-mini、gpt-3.5-turbo、gpt-4o<br>
             环境变量：<code>OPENAI_MODEL</code>
           </p>
@@ -130,9 +135,16 @@
                 type="text"
                 placeholder="Authorization"
                 class="setting-input"
-                :disabled="saving"
+                :disabled="saving || lockedFields.authHeader"
               />
-              <p class="setting-note">
+              <p v-if="lockedFields.authHeader" class="setting-note setting-locked">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                此参数已通过环境变量 <code>OPENAI_AUTH_HEADER</code> 配置，无法在界面修改
+              </p>
+              <p v-else class="setting-note">
                 环境变量：<code>OPENAI_AUTH_HEADER</code>
               </p>
             </div>
@@ -148,9 +160,16 @@
                 type="text"
                 placeholder="Bearer "
                 class="setting-input"
-                :disabled="saving"
+                :disabled="saving || lockedFields.authPrefix"
               />
-              <p class="setting-note">
+              <p v-if="lockedFields.authPrefix" class="setting-note setting-locked">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                此参数已通过环境变量 <code>OPENAI_AUTH_PREFIX</code> 配置，无法在界面修改
+              </p>
+              <p v-else class="setting-note">
                 留空表示不添加前缀（某些服务直接传 API Key）<br>
                 环境变量：<code>OPENAI_AUTH_PREFIX</code>
               </p>
@@ -176,6 +195,134 @@
             取消
           </button>
         </div>
+      </div>
+    </div>
+
+    <div v-if="isAuthenticated" class="settings-group prompt-settings">
+      <h3 class="subsection-title">自定义 Prompt 提示词</h3>
+      <p class="subsection-description">
+        分别自定义书签描述生成和分类推荐的提示词。开启后将使用自定义提示词替代默认提示词。
+      </p>
+      
+      <!-- 书签描述生成提示词 -->
+      <div class="prompt-section">
+        <h4 class="prompt-section-title">书签描述生成</h4>
+        
+        <div class="setting-item">
+          <div class="setting-header">
+            <label class="setting-label">启用自定义描述提示词</label>
+            <span class="setting-hint">开启后使用自定义提示词生成书签描述</span>
+          </div>
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              v-model="localCustomPromptDescriptionEnabled"
+              :disabled="saving"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+          <p class="setting-note">
+            关闭后将使用系统默认 Prompt
+          </p>
+        </div>
+        
+        <div v-show="localCustomPromptDescriptionEnabled" class="setting-item">
+          <div class="setting-header">
+            <label class="setting-label">自定义描述提示词</label>
+            <span class="setting-hint">填写你的自定义提示词</span>
+          </div>
+          <textarea
+            v-model="localCustomPromptDescription"
+            class="setting-textarea"
+            rows="8"
+            placeholder="输入自定义 Prompt...&#10;&#10;可用变量：{name} {url}&#10;&#10;示例：&#10;为以下书签生成简洁的中文描述：&#10;名称：{name}&#10;链接：{url}&#10;&#10;要求：一句话说明网站功能，20字以内"
+            :disabled="saving"
+          ></textarea>
+          <p class="setting-note">
+            <strong>可用变量：</strong><code>{name}</code> - 书签名称，<code>{url}</code> - 书签链接
+          </p>
+          
+          <div class="example-templates">
+            <button
+              class="btn btn-secondary btn-sm"
+              @click="fillDescriptionTemplate"
+              :disabled="saving"
+            >
+              填充示例模板
+            </button>
+            <span class="template-hint">快速填充预设的示例 Prompt 模板</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 分类推荐提示词 -->
+      <div class="prompt-section">
+        <h4 class="prompt-section-title">分类推荐</h4>
+        
+        <div class="setting-item">
+          <div class="setting-header">
+            <label class="setting-label">启用自定义分类提示词</label>
+            <span class="setting-hint">开启后使用自定义提示词推荐分类</span>
+          </div>
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              v-model="localCustomPromptCategoryEnabled"
+              :disabled="saving"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+          <p class="setting-note">
+            关闭后将使用系统默认 Prompt
+          </p>
+        </div>
+        
+        <div v-show="localCustomPromptCategoryEnabled" class="setting-item">
+          <div class="setting-header">
+            <label class="setting-label">自定义分类提示词</label>
+            <span class="setting-hint">填写你的自定义提示词</span>
+          </div>
+          <textarea
+            v-model="localCustomPromptCategory"
+            class="setting-textarea"
+            rows="8"
+            placeholder="输入自定义 Prompt...&#10;&#10;可用变量：{name} {url} {description} {categories}&#10;&#10;示例：&#10;根据书签信息推荐最合适的分类：&#10;名称：{name}&#10;链接：{url}&#10;描述：{description}&#10;&#10;可选分类：&#10;{categories}&#10;&#10;返回 JSON 格式：{&quot;categoryId&quot;: 分类ID, &quot;reason&quot;: &quot;推荐理由&quot;}"
+            :disabled="saving"
+          ></textarea>
+          <p class="setting-note">
+            <strong>可用变量：</strong><code>{name}</code> - 书签名称，<code>{url}</code> - 书签链接，<code>{description}</code> - 书签描述，<code>{categories}</code> - 可选分类列表
+          </p>
+          
+          <div class="example-templates">
+            <button
+              class="btn btn-secondary btn-sm"
+              @click="fillCategoryTemplate"
+              :disabled="saving"
+            >
+              填充示例模板
+            </button>
+            <span class="template-hint">快速填充预设的示例 Prompt 模板</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="setting-actions">
+        <button
+          class="btn btn-primary"
+          @click="savePrompts"
+          :disabled="saving || !hasPromptChanges"
+        >
+          <span v-if="saving">保存中...</span>
+          <span v-else>保存 Prompt</span>
+        </button>
+        <button
+          v-if="hasPromptChanges"
+          class="btn btn-secondary"
+          @click="resetPrompts"
+          :disabled="saving"
+        >
+          取消
+        </button>
       </div>
     </div>
 
@@ -205,7 +352,6 @@
         <li>Azure OpenAI</li>
         <li>Claude (via API)</li>
         <li>Google Gemini</li>
-        <li>本地部署的模型（如 Ollama、LM Studio）</li>
         <li>各类代理服务和中转 API</li>
       </ul>
     </div>
@@ -227,11 +373,25 @@ const localBaseUrl = ref('https://api.openai.com/v1')
 const localModel = ref('gpt-4o-mini')
 const localAuthHeader = ref('Authorization')
 const localAuthPrefix = ref('Bearer ')
-const showApiKey = ref(false)
 const showAdvanced = ref(false)
 const saving = ref(false)
 
+const localCustomPrompt = ref('')
+const localCustomPromptEnabled = ref(false)
+const localCustomPromptDescription = ref('')
+const localCustomPromptDescriptionEnabled = ref(false)
+const localCustomPromptCategory = ref('')
+const localCustomPromptCategoryEnabled = ref(false)
+
+const lockedFields = ref({})
+
 const originalSettings = ref({})
+const originalPrompt = ref('')
+const originalPromptEnabled = ref(false)
+const originalPromptDescription = ref('')
+const originalPromptDescriptionEnabled = ref(false)
+const originalPromptCategory = ref('')
+const originalPromptCategoryEnabled = ref(false)
 
 const hasChanges = computed(() => {
   if (!isAuthenticated.value) return false
@@ -244,6 +404,16 @@ const hasChanges = computed(() => {
   )
 })
 
+const hasPromptChanges = computed(() => {
+  if (!isAuthenticated.value) return false
+  return localCustomPrompt.value !== originalPrompt.value ||
+    localCustomPromptEnabled.value !== originalPromptEnabled.value ||
+    localCustomPromptDescription.value !== originalPromptDescription.value ||
+    localCustomPromptDescriptionEnabled.value !== originalPromptDescriptionEnabled.value ||
+    localCustomPromptCategory.value !== originalPromptCategory.value ||
+    localCustomPromptCategoryEnabled.value !== originalPromptCategoryEnabled.value
+})
+
 const loadSettings = async () => {
   if (!isAuthenticated.value) return
 
@@ -254,6 +424,7 @@ const loadSettings = async () => {
     localModel.value = result.model || 'gpt-4o-mini'
     localAuthHeader.value = result.authHeader || 'Authorization'
     localAuthPrefix.value = result.authPrefix !== undefined ? result.authPrefix : 'Bearer '
+    lockedFields.value = result.lockedFields || {}
 
     originalSettings.value = {
       apiKey: localApiKey.value,
@@ -268,23 +439,25 @@ const loadSettings = async () => {
 const saveSettings = async () => {
   saving.value = true
   try {
-    const result = await saveAISettings({
-      apiKey: localApiKey.value,
+    const settingsToSave = {
       baseUrl: localBaseUrl.value,
       model: localModel.value,
       authHeader: localAuthHeader.value,
       authPrefix: localAuthPrefix.value
-    })
+    }
+    
+    // 只有当 API Key 有值时才发送
+    if (localApiKey.value) {
+      settingsToSave.apiKey = localApiKey.value
+    }
+    
+    const result = await saveAISettings(settingsToSave)
 
     if (result.success) {
       toastSuccess('AI 配置已保存')
-      originalSettings.value = {
-        apiKey: localApiKey.value,
-        baseUrl: localBaseUrl.value,
-        model: localModel.value,
-        authHeader: localAuthHeader.value,
-        authPrefix: localAuthPrefix.value
-      }
+      // 保存成功后清空 API Key 输入框并重新加载设置
+      localApiKey.value = ''
+      await loadSettings()
       await checkAIAvailability()
     } else {
       toastError(result.error || '保存失败')
@@ -304,9 +477,127 @@ const resetSettings = () => {
   localAuthPrefix.value = originalSettings.value.authPrefix
 }
 
+const savePrompts = async () => {
+  saving.value = true
+  try {
+    const result = await saveAISettings({
+      customPrompt: localCustomPrompt.value,
+      customPromptEnabled: localCustomPromptEnabled.value,
+      customPromptDescription: localCustomPromptDescription.value,
+      customPromptDescriptionEnabled: localCustomPromptDescriptionEnabled.value,
+      customPromptCategory: localCustomPromptCategory.value,
+      customPromptCategoryEnabled: localCustomPromptCategoryEnabled.value
+    })
+
+    if (result.success) {
+      toastSuccess('Prompt 配置已保存')
+      originalPrompt.value = localCustomPrompt.value
+      originalPromptEnabled.value = localCustomPromptEnabled.value
+      originalPromptDescription.value = localCustomPromptDescription.value
+      originalPromptDescriptionEnabled.value = localCustomPromptDescriptionEnabled.value
+      originalPromptCategory.value = localCustomPromptCategory.value
+      originalPromptCategoryEnabled.value = localCustomPromptCategoryEnabled.value
+    } else {
+      toastError(result.error || '保存失败')
+    }
+  } catch (error) {
+    toastError('保存失败')
+  } finally {
+    saving.value = false
+  }
+}
+
+const resetPrompts = () => {
+  localCustomPrompt.value = originalPrompt.value
+  localCustomPromptEnabled.value = originalPromptEnabled.value
+  localCustomPromptDescription.value = originalPromptDescription.value
+  localCustomPromptDescriptionEnabled.value = originalPromptDescriptionEnabled.value
+  localCustomPromptCategory.value = originalPromptCategory.value
+  localCustomPromptCategoryEnabled.value = originalPromptCategoryEnabled.value
+}
+
+const loadPrompts = async () => {
+  if (!isAuthenticated.value) return
+  
+  const result = await getAISettings()
+  if (result.success) {
+    localCustomPrompt.value = result.customPrompt || ''
+    localCustomPromptEnabled.value = result.customPromptEnabled || false
+    localCustomPromptDescription.value = result.customPromptDescription || ''
+    localCustomPromptDescriptionEnabled.value = result.customPromptDescriptionEnabled || false
+    localCustomPromptCategory.value = result.customPromptCategory || ''
+    localCustomPromptCategoryEnabled.value = result.customPromptCategoryEnabled || false
+    originalPrompt.value = localCustomPrompt.value
+    originalPromptEnabled.value = localCustomPromptEnabled.value
+    originalPromptDescription.value = localCustomPromptDescription.value
+    originalPromptDescriptionEnabled.value = localCustomPromptDescriptionEnabled.value
+    originalPromptCategory.value = localCustomPromptCategory.value
+    originalPromptCategoryEnabled.value = localCustomPromptCategoryEnabled.value
+  }
+}
+
+const fillExampleTemplate = () => {
+  localCustomPrompt.value = `为以下书签生成简洁的中文描述：
+
+名称：{name}
+链接：{url}
+
+要求：
+1. 使用简体中文
+2. 一句话说明网站功能，20字以内
+3. 直接返回描述，不要引号
+
+示例：
+- GitHub → 全球最大的代码托管平台
+- 知乎 → 中文互联网问答社区`
+  toastSuccess('已填充示例模板')
+}
+
+const fillDescriptionTemplate = () => {
+  localCustomPromptDescription.value = `为以下书签生成简洁的中文描述：
+
+名称：{name}
+链接：{url}
+
+要求：
+1. 使用简体中文
+2. 一句话说明网站功能或内容，20字以内
+3. 直接返回描述文本，不要引号或其他格式
+
+示例：
+- GitHub → 全球最大的代码托管和协作平台
+- 知乎 → 中文互联网高质量问答社区
+- MDN Web Docs → Web 技术权威文档和学习资源`
+  toastSuccess('已填充书签描述示例模板')
+}
+
+const fillCategoryTemplate = () => {
+  localCustomPromptCategory.value = `你是一个书签分类助手，根据书签信息推荐最合适的分类。
+
+书签信息：
+名称：{name}
+链接：{url}
+描述：{description}
+
+可选分类列表（ID: 分类名称或路径）：
+{categories}
+
+要求：
+1. 仔细分析书签的名称、URL 和描述
+2. 从可选分类中选择最匹配的一个分类 ID
+3. 用简体中文说明推荐理由（一句话）
+4. 返回 JSON 格式：{"categoryId": 分类ID数字, "reason": "推荐理由"}
+
+示例：
+- 对于 GitHub 项目链接，如果有"开发工具"或"编程"分类，优先选择
+- 对于技术文档，如果有"学习资源"或"文档"分类，优先选择`
+  toastSuccess('已填充分类推荐示例模板')
+}
+
 onMounted(async () => {
   await checkAIAvailability()
   await loadSettings()
+  await loadPrompts()
 })
 </script>
 
@@ -323,6 +614,20 @@ onMounted(async () => {
   font-size: 0.8125rem;
   line-height: 1.5;
   margin: 0 0 1.5rem 0;
+}
+
+.doc-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.doc-link:hover {
+  text-decoration: underline;
 }
 
 .settings-group {
@@ -397,6 +702,22 @@ onMounted(async () => {
   font-size: 0.85em;
 }
 
+.setting-locked {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.setting-locked svg {
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
 .status-display {
   display: flex;
   align-items: center;
@@ -439,39 +760,6 @@ onMounted(async () => {
   background: var(--bg-secondary);
   color: var(--text-secondary);
   cursor: not-allowed;
-}
-
-.input-with-action {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.input-with-action input {
-  flex: 1;
-}
-
-.btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-icon:hover {
-  background: var(--bg);
-  border-color: var(--primary);
-}
-
-.btn-icon svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
-  color: var(--text-secondary);
 }
 
 .advanced-settings {
@@ -624,5 +912,138 @@ onMounted(async () => {
   .compatible-services {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
+}
+
+.prompt-settings {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border);
+}
+
+.subsection-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.5rem 0;
+}
+
+.subsection-description {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+}
+
+.setting-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 150px;
+}
+
+.setting-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.setting-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  margin-top: 0.5rem;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border);
+  transition: var(--transition);
+  border-radius: 26px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: var(--transition);
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--primary);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(22px);
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.example-templates {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.template-hint {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.prompt-section {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.prompt-section:first-child {
+  margin-top: 0;
+}
+
+.prompt-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 1rem 0;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: var(--text-xs);
 }
 </style>

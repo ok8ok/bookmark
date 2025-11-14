@@ -120,6 +120,33 @@
           </button>
           
           <button 
+            class="toolbar-btn batch-ai-btn" 
+            @click="$emit('batchAIGenerate')" 
+            title="AI 批量生成描述"
+            :disabled="selectedCount === 0 || !aiEnabled"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            <span>AI 生成</span>
+          </button>
+          
+          <button 
+            class="toolbar-btn batch-ai-classify-btn" 
+            @click="$emit('batchAIClassify')" 
+            title="AI 批量分类"
+            :disabled="selectedCount === 0 || !aiEnabled"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            </svg>
+            <span>AI 分类</span>
+          </button>
+          
+          <button 
             class="toolbar-btn batch-delete-btn" 
             @click="$emit('batchDelete')" 
             title="批量删除"
@@ -184,6 +211,10 @@ defineProps({
   hasBookmarks: {
     type: Boolean,
     default: false
+  },
+  aiEnabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -196,6 +227,8 @@ defineEmits([
   'invertSelection',
   'batchMove',
   'batchEdit',
+  'batchAIGenerate',
+  'batchAIClassify',
   'batchDelete',
   'batchDeleteCategories',
   'finishEdit'
@@ -362,6 +395,26 @@ html.dark .edit-toolbar {
 .batch-move-btn:hover:not(:disabled),
 .batch-edit-btn:hover:not(:disabled) {
   background: #d97706;
+  transform: translateY(-1px);
+}
+
+.batch-ai-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.batch-ai-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+  transform: translateY(-1px);
+}
+
+.batch-ai-classify-btn {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.batch-ai-classify-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e07be8 0%, #e34558 100%);
   transform: translateY(-1px);
 }
 

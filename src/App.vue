@@ -70,6 +70,7 @@
         :selected-count="selectedCount"
         :selected-category-count="selectedCategoryCount"
         :has-bookmarks="bookmarks.length > 0"
+        :ai-enabled="aiEnabled"
         @addBookmark="handleAddBookmark"
         @addCategory="handleAddCategory"
         @toggleBatchMode="handleToggleBatchMode"
@@ -78,6 +79,8 @@
         @invertSelection="handleInvertSelection"
         @batchMove="handleBatchMove"
         @batchEdit="handleBatchEdit"
+        @batchAIGenerate="handleBatchAIGenerate"
+        @batchAIClassify="handleBatchAIClassify"
         @batchDelete="handleBatchDelete"
         @batchDeleteCategories="handleBatchDeleteCategories"
         @finishEdit="() => { isEditMode = false }"
@@ -207,6 +210,8 @@
     <FooterEditDialog ref="footerEditDialog" />
     <ImportExportDialog ref="importExportDialog" />
     <BatchOperationDialog ref="batchOperationDialog" />
+    <BatchAIGenerateDialog ref="batchAIGenerateDialog" />
+    <BatchAIClassifyDialog ref="batchAIClassifyDialog" />
     <BackupDialog ref="backupDialog" />
     
     <!-- Settings Page -->
@@ -271,11 +276,15 @@ import PromptDialog from './components/PromptDialog.vue'
 import FooterEditDialog from './components/FooterEditDialog.vue'
 import ImportExportDialog from './components/ImportExportDialog.vue'
 import BatchOperationDialog from './components/BatchOperationDialog.vue'
+import BatchAIGenerateDialog from './components/BatchAIGenerateDialog.vue'
+import BatchAIClassifyDialog from './components/BatchAIClassifyDialog.vue'
 import BackupDialog from './components/BackupDialog.vue'
 import UpdateNotification from './components/UpdateNotification.vue'
 import ToastNotification from './components/ToastNotification.vue'
+import { useAI } from './composables/useAI'
 
 const { isAuthenticated, logout, onAuthChange } = useAuth()
+const { aiEnabled, checkAIAvailability } = useAI()
 const {
   categories,
   bookmarks,
@@ -322,6 +331,8 @@ const promptDialog = ref(null)
 const footerEditDialog = ref(null)
 const importExportDialog = ref(null)
 const batchOperationDialog = ref(null)
+const batchAIGenerateDialog = ref(null)
+const batchAIClassifyDialog = ref(null)
 const backupDialog = ref(null)
 const settingsPage = ref(null)
 const toast = ref(null)
@@ -545,6 +556,9 @@ onMounted(async () => {
   // 初始化时加载设置（无论是否登录）
   await loadSettingsFromDB()
   await loadThemeFromDB()
+  
+  // 检查AI可用性
+  await checkAIAvailability()
   
   // 如果壁纸已启用，应用壁纸
   if (randomWallpaper.value) {
@@ -915,6 +929,55 @@ const handleBatchEdit = async () => {
   } else {
     toastError(result.error || '批量编辑失败')
   }
+}
+
+const handleBatchAIGenerate = async () => {
+  if (selectedCount.value === 0) {
+    toastError('请先选择需要生成描述的书签')
+    return
+  }
+  
+  if (!aiEnabled.value) {
+    toastError('AI 功能未启用，请先在设置中配置 AI')
+    return
+  }
+  
+  const ids = getSelectedIds()
+  const selectedBookmarksList = bookmarks.value.filter(b => ids.includes(b.id))
+  
+  if (selectedBookmarksList.length === 0) {
+    toastError('未找到选中的书签')
+    return
+  }
+  
+  batchAIGenerateDialog.value?.open(selectedBookmarksList)
+}
+
+const handleBatchAIClassify = async () => {
+  if (selectedCount.value === 0) {
+    toastError('请先选择需要分类的书签')
+    return
+  }
+  
+  if (!aiEnabled.value) {
+    toastError('AI 功能未启用，请先在设置中配置 AI')
+    return
+  }
+  
+  if (categories.value.length === 0) {
+    toastError('请先创建分类')
+    return
+  }
+  
+  const ids = getSelectedIds()
+  const selectedBookmarksList = bookmarks.value.filter(b => ids.includes(b.id))
+  
+  if (selectedBookmarksList.length === 0) {
+    toastError('未找到选中的书签')
+    return
+  }
+  
+  batchAIClassifyDialog.value?.open(selectedBookmarksList)
 }
 
 const handleReorderBookmarks = async (items) => {
