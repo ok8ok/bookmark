@@ -339,16 +339,34 @@ const isScrollingProgrammatically = ref(false)
 const selectedIds = computed(() => getSelectedIds())
 const selectedCategoryIds = computed(() => getSelectedCategoryIds())
 
+// 递归计算分类及其所有子分类的书签总数
+const getBookmarkCountWithDescendants = (categoryId, categoryMap) => {
+  let count = bookmarksByCategory.value[categoryId]?.length || 0
+  const category = categoryMap[categoryId]
+  
+  if (category && category.children && category.children.length > 0) {
+    category.children.forEach(child => {
+      count += getBookmarkCountWithDescendants(child.id, categoryMap)
+    })
+  }
+  
+  return count
+}
+
 const bookmarkCountByCategory = computed(() => {
   const counts = {}
+  const { map: categoryMap } = buildCategoryTree(categories.value)
+  
   categories.value.forEach(category => {
-    counts[category.id] = bookmarksByCategory.value[category.id]?.length || 0
+    counts[category.id] = getBookmarkCountWithDescendants(category.id, categoryMap)
   })
   return counts
 })
 
 const totalBookmarkCount = computed(() => {
-  return categories.value.reduce((total, category) => {
+  // 只统计根分类的书签数（包含子分类），避免重复计算
+  const { tree } = buildCategoryTree(categories.value)
+  return tree.reduce((total, category) => {
     return total + (bookmarkCountByCategory.value[category.id] || 0)
   }, 0)
 })
