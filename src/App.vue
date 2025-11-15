@@ -187,7 +187,19 @@
             />
           </template>
           <div v-else class="empty-state">
-            暂无可用分类，请先创建分类
+            <template v-if="searchQuery || searchCategoryId">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+              <p>搜索无结果</p>
+              <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--text-secondary);">
+                没有找到匹配的书签，请尝试其他搜索词或分类
+              </p>
+            </template>
+            <template v-else>
+              <p>暂无可用分类，请先创建分类</p>
+            </template>
           </div>
         </div>
       </div>
@@ -260,6 +272,7 @@ import { useBookmarks } from './composables/useBookmarks'
 import { useBatchOperations } from './composables/useBatchOperations'
 import { useTheme } from './composables/useTheme'
 import { useSettings } from './composables/useSettings'
+import { useSearchEngines } from './composables/useSearchEngines'
 import { useToast } from './composables/useToast'
 import { buildCategoryTree, getCategoryPath } from './utils/categoryTree'
 import SearchBar from './components/SearchBar.vue'
@@ -285,9 +298,12 @@ import { useAI } from './composables/useAI'
 
 const { isAuthenticated, logout, onAuthChange } = useAuth()
 const { aiEnabled, checkAIAvailability } = useAI()
+const { loadSettingsFromDB: loadSearchEnginesSettings } = useSearchEngines()
 const {
   categories,
   bookmarks,
+  searchQuery,
+  searchCategoryId,
   filteredBookmarks,
   bookmarksByCategory,
   fetchData,
@@ -556,6 +572,7 @@ onMounted(async () => {
   // 初始化时加载设置（无论是否登录）
   await loadSettingsFromDB()
   await loadThemeFromDB()
+  await loadSearchEnginesSettings()
   
   // 检查AI可用性
   await checkAIAvailability()
@@ -583,6 +600,7 @@ onMounted(async () => {
     // 登录后重新加载设置（确保获取最新数据）
     await loadSettingsFromDB()
     await loadThemeFromDB()
+    await loadSearchEnginesSettings()
     // 登录后检查空分类
     if (isAuthenticated.value) {
       checkEmptyCategories()

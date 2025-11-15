@@ -3,19 +3,15 @@ export async function onRequestGet(context) {
   
   try {
     const results = await env.DB.prepare(
-      'SELECT key, value FROM settings WHERE key IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'SELECT key, value FROM settings WHERE key IN (?, ?, ?, ?, ?, ?, ?)'
     ).bind(
       'secret_openai_api_key', 
       'ai_base_url', 
       'ai_model', 
       'ai_auth_header', 
       'ai_auth_prefix',
-      'ai_custom_prompt',
-      'ai_custom_prompt_enabled',
       'ai_custom_prompt_description',
-      'ai_custom_prompt_description_enabled',
-      'ai_custom_prompt_category',
-      'ai_custom_prompt_category_enabled'
+      'ai_custom_prompt_description_enabled'
     ).all();
     
     const settings = {};
@@ -57,12 +53,8 @@ export async function onRequestGet(context) {
       authPrefix,
       hasApiKey: !!env.OPENAI_API_KEY || !!settings.secret_openai_api_key,
       lockedFields,
-      customPrompt: settings.ai_custom_prompt || '',
-      customPromptEnabled: settings.ai_custom_prompt_enabled === 'true',
       customPromptDescription: settings.ai_custom_prompt_description || '',
-      customPromptDescriptionEnabled: settings.ai_custom_prompt_description_enabled === 'true',
-      customPromptCategory: settings.ai_custom_prompt_category || '',
-      customPromptCategoryEnabled: settings.ai_custom_prompt_category_enabled === 'true'
+      customPromptDescriptionEnabled: settings.ai_custom_prompt_description_enabled === 'true'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -84,9 +76,7 @@ export async function onRequestPost(context) {
   try {
     const { 
       apiKey, baseUrl, model, authHeader, authPrefix, 
-      customPrompt, customPromptEnabled,
-      customPromptDescription, customPromptDescriptionEnabled,
-      customPromptCategory, customPromptCategoryEnabled
+      customPromptDescription, customPromptDescriptionEnabled
     } = await request.json();
     
     const statements = [];
@@ -160,29 +150,6 @@ export async function onRequestPost(context) {
       );
     }
     
-    if (customPrompt !== undefined) {
-      if (customPrompt && customPrompt.trim()) {
-        statements.push(
-          env.DB.prepare(
-            'INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
-          ).bind('ai_custom_prompt', customPrompt)
-        );
-      } else {
-        statements.push(
-          env.DB.prepare('DELETE FROM settings WHERE key = ?')
-            .bind('ai_custom_prompt')
-        );
-      }
-    }
-    
-    if (customPromptEnabled !== undefined) {
-      statements.push(
-        env.DB.prepare(
-          'INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
-        ).bind('ai_custom_prompt_enabled', customPromptEnabled ? 'true' : 'false')
-      );
-    }
-    
     if (customPromptDescription !== undefined) {
       if (customPromptDescription && customPromptDescription.trim()) {
         statements.push(
@@ -203,29 +170,6 @@ export async function onRequestPost(context) {
         env.DB.prepare(
           'INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
         ).bind('ai_custom_prompt_description_enabled', customPromptDescriptionEnabled ? 'true' : 'false')
-      );
-    }
-    
-    if (customPromptCategory !== undefined) {
-      if (customPromptCategory && customPromptCategory.trim()) {
-        statements.push(
-          env.DB.prepare(
-            'INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
-          ).bind('ai_custom_prompt_category', customPromptCategory)
-        );
-      } else {
-        statements.push(
-          env.DB.prepare('DELETE FROM settings WHERE key = ?')
-            .bind('ai_custom_prompt_category')
-        );
-      }
-    }
-    
-    if (customPromptCategoryEnabled !== undefined) {
-      statements.push(
-        env.DB.prepare(
-          'INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)'
-        ).bind('ai_custom_prompt_category_enabled', customPromptCategoryEnabled ? 'true' : 'false')
       );
     }
     

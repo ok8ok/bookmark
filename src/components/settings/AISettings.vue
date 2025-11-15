@@ -33,14 +33,32 @@
             <label class="setting-label" for="ai-api-key">API Key</label>
             <span class="setting-hint">OpenAI API Key 或兼容服务的密钥</span>
           </div>
-          <input
-            id="ai-api-key"
-            v-model="localApiKey"
-            type="password"
-            placeholder="sk-..."
-            class="setting-input"
-            :disabled="saving || lockedFields.apiKey"
-          />
+          <div class="api-key-input-wrapper">
+            <input
+              id="ai-api-key"
+              v-model="localApiKey"
+              :type="showApiKey ? 'text' : 'password'"
+              placeholder="sk-..."
+              class="setting-input"
+              :disabled="saving || lockedFields.apiKey"
+            />
+            <button
+              v-if="!lockedFields.apiKey && localApiKey"
+              type="button"
+              class="btn-toggle-visibility"
+              @click="showApiKey = !showApiKey"
+              :title="showApiKey ? '隐藏 API Key' : '显示 API Key'"
+            >
+              <svg v-if="showApiKey" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-eye">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" class="icon-eye-off">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
           <p v-if="lockedFields.apiKey" class="setting-note setting-locked">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -201,108 +219,52 @@
     <div v-if="isAuthenticated" class="settings-group prompt-settings">
       <h3 class="subsection-title">自定义 Prompt 提示词</h3>
       <p class="subsection-description">
-        分别自定义书签描述生成和分类推荐的提示词。开启后将使用自定义提示词替代默认提示词。
+        自定义提示词用于生成书签描述。开启后将使用自定义提示词替代默认提示词。
       </p>
       
-      <!-- 书签描述生成提示词 -->
-      <div class="prompt-section">
-        <h4 class="prompt-section-title">书签描述生成</h4>
-        
-        <div class="setting-item">
-          <div class="setting-header">
-            <label class="setting-label">启用自定义描述提示词</label>
-            <span class="setting-hint">开启后使用自定义提示词生成书签描述</span>
-          </div>
-          <label class="toggle-switch">
-            <input 
-              type="checkbox" 
-              v-model="localCustomPromptDescriptionEnabled"
-              :disabled="saving"
-            />
-            <span class="toggle-slider"></span>
-          </label>
-          <p class="setting-note">
-            关闭后将使用系统默认 Prompt
-          </p>
+      <div class="setting-item">
+        <div class="setting-header">
+          <label class="setting-label">启用自定义提示词</label>
+          <span class="setting-hint">开启后使用自定义提示词</span>
         </div>
-        
-        <div v-show="localCustomPromptDescriptionEnabled" class="setting-item">
-          <div class="setting-header">
-            <label class="setting-label">自定义描述提示词</label>
-            <span class="setting-hint">填写你的自定义提示词</span>
-          </div>
-          <textarea
-            v-model="localCustomPromptDescription"
-            class="setting-textarea"
-            rows="8"
-            placeholder="输入自定义 Prompt...&#10;&#10;可用变量：{name} {url}&#10;&#10;示例：&#10;为以下书签生成简洁的中文描述：&#10;名称：{name}&#10;链接：{url}&#10;&#10;要求：一句话说明网站功能，20字以内"
+        <label class="toggle-switch">
+          <input 
+            type="checkbox" 
+            v-model="localCustomPromptDescriptionEnabled"
             :disabled="saving"
-          ></textarea>
-          <p class="setting-note">
-            <strong>可用变量：</strong><code>{name}</code> - 书签名称，<code>{url}</code> - 书签链接
-          </p>
-          
-          <div class="example-templates">
-            <button
-              class="btn btn-secondary btn-sm"
-              @click="fillDescriptionTemplate"
-              :disabled="saving"
-            >
-              填充示例模板
-            </button>
-            <span class="template-hint">快速填充预设的示例 Prompt 模板</span>
-          </div>
-        </div>
+          />
+          <span class="toggle-slider"></span>
+        </label>
+        <p class="setting-note">
+          关闭后将使用系统默认 Prompt
+        </p>
       </div>
       
-      <!-- 分类推荐提示词 -->
-      <div class="prompt-section">
-        <h4 class="prompt-section-title">分类推荐</h4>
-        
-        <div class="setting-item">
-          <div class="setting-header">
-            <label class="setting-label">启用自定义分类提示词</label>
-            <span class="setting-hint">开启后使用自定义提示词推荐分类</span>
-          </div>
-          <label class="toggle-switch">
-            <input 
-              type="checkbox" 
-              v-model="localCustomPromptCategoryEnabled"
-              :disabled="saving"
-            />
-            <span class="toggle-slider"></span>
-          </label>
-          <p class="setting-note">
-            关闭后将使用系统默认 Prompt
-          </p>
+      <div v-show="localCustomPromptDescriptionEnabled" class="setting-item">
+        <div class="setting-header">
+          <label class="setting-label">自定义提示词</label>
+          <span class="setting-hint">用于书签描述生成</span>
         </div>
+        <textarea
+          v-model="localCustomPromptDescription"
+          class="setting-textarea"
+          rows="8"
+          placeholder="输入自定义 Prompt...&#10;&#10;可用变量：{name} {url}&#10;&#10;示例：&#10;为以下书签生成简洁的中文描述：&#10;名称：{name}&#10;链接：{url}&#10;&#10;要求：一句话说明网站功能，20字以内"
+          :disabled="saving"
+        ></textarea>
+        <p class="setting-note">
+          <strong>可用变量：</strong><code>{name}</code> - 书签名称，<code>{url}</code> - 书签链接
+        </p>
         
-        <div v-show="localCustomPromptCategoryEnabled" class="setting-item">
-          <div class="setting-header">
-            <label class="setting-label">自定义分类提示词</label>
-            <span class="setting-hint">填写你的自定义提示词</span>
-          </div>
-          <textarea
-            v-model="localCustomPromptCategory"
-            class="setting-textarea"
-            rows="8"
-            placeholder="输入自定义 Prompt...&#10;&#10;可用变量：{name} {url} {description} {categories}&#10;&#10;示例：&#10;根据书签信息推荐最合适的分类：&#10;名称：{name}&#10;链接：{url}&#10;描述：{description}&#10;&#10;可选分类：&#10;{categories}&#10;&#10;返回 JSON 格式：{&quot;categoryId&quot;: 分类ID, &quot;reason&quot;: &quot;推荐理由&quot;}"
+        <div class="example-templates">
+          <button
+            class="btn btn-secondary btn-sm"
+            @click="fillDescriptionTemplate"
             :disabled="saving"
-          ></textarea>
-          <p class="setting-note">
-            <strong>可用变量：</strong><code>{name}</code> - 书签名称，<code>{url}</code> - 书签链接，<code>{description}</code> - 书签描述，<code>{categories}</code> - 可选分类列表
-          </p>
-          
-          <div class="example-templates">
-            <button
-              class="btn btn-secondary btn-sm"
-              @click="fillCategoryTemplate"
-              :disabled="saving"
-            >
-              填充示例模板
-            </button>
-            <span class="template-hint">快速填充预设的示例 Prompt 模板</span>
-          </div>
+          >
+            填充示例模板
+          </button>
+          <span class="template-hint">快速填充预设的示例 Prompt 模板</span>
         </div>
       </div>
       
@@ -366,7 +328,7 @@ import { useToast } from '../../composables/useToast'
 
 const { isAuthenticated } = useAuth()
 const { aiEnabled, aiSource, checkAIAvailability, saveAISettings, getAISettings } = useAI()
-const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast()
+const { success: toastSuccess, error: toastError } = useToast()
 
 const localApiKey = ref('')
 const localBaseUrl = ref('https://api.openai.com/v1')
@@ -376,22 +338,16 @@ const localAuthPrefix = ref('Bearer ')
 const showAdvanced = ref(false)
 const saving = ref(false)
 
-const localCustomPrompt = ref('')
-const localCustomPromptEnabled = ref(false)
+const showApiKey = ref(false)
+
 const localCustomPromptDescription = ref('')
 const localCustomPromptDescriptionEnabled = ref(false)
-const localCustomPromptCategory = ref('')
-const localCustomPromptCategoryEnabled = ref(false)
 
 const lockedFields = ref({})
 
 const originalSettings = ref({})
-const originalPrompt = ref('')
-const originalPromptEnabled = ref(false)
 const originalPromptDescription = ref('')
 const originalPromptDescriptionEnabled = ref(false)
-const originalPromptCategory = ref('')
-const originalPromptCategoryEnabled = ref(false)
 
 const hasChanges = computed(() => {
   if (!isAuthenticated.value) return false
@@ -406,12 +362,8 @@ const hasChanges = computed(() => {
 
 const hasPromptChanges = computed(() => {
   if (!isAuthenticated.value) return false
-  return localCustomPrompt.value !== originalPrompt.value ||
-    localCustomPromptEnabled.value !== originalPromptEnabled.value ||
-    localCustomPromptDescription.value !== originalPromptDescription.value ||
-    localCustomPromptDescriptionEnabled.value !== originalPromptDescriptionEnabled.value ||
-    localCustomPromptCategory.value !== originalPromptCategory.value ||
-    localCustomPromptCategoryEnabled.value !== originalPromptCategoryEnabled.value
+  return localCustomPromptDescription.value !== originalPromptDescription.value ||
+    localCustomPromptDescriptionEnabled.value !== originalPromptDescriptionEnabled.value
 })
 
 const loadSettings = async () => {
@@ -481,22 +433,14 @@ const savePrompts = async () => {
   saving.value = true
   try {
     const result = await saveAISettings({
-      customPrompt: localCustomPrompt.value,
-      customPromptEnabled: localCustomPromptEnabled.value,
       customPromptDescription: localCustomPromptDescription.value,
-      customPromptDescriptionEnabled: localCustomPromptDescriptionEnabled.value,
-      customPromptCategory: localCustomPromptCategory.value,
-      customPromptCategoryEnabled: localCustomPromptCategoryEnabled.value
+      customPromptDescriptionEnabled: localCustomPromptDescriptionEnabled.value
     })
 
     if (result.success) {
       toastSuccess('Prompt 配置已保存')
-      originalPrompt.value = localCustomPrompt.value
-      originalPromptEnabled.value = localCustomPromptEnabled.value
       originalPromptDescription.value = localCustomPromptDescription.value
       originalPromptDescriptionEnabled.value = localCustomPromptDescriptionEnabled.value
-      originalPromptCategory.value = localCustomPromptCategory.value
-      originalPromptCategoryEnabled.value = localCustomPromptCategoryEnabled.value
     } else {
       toastError(result.error || '保存失败')
     }
@@ -508,12 +452,8 @@ const savePrompts = async () => {
 }
 
 const resetPrompts = () => {
-  localCustomPrompt.value = originalPrompt.value
-  localCustomPromptEnabled.value = originalPromptEnabled.value
   localCustomPromptDescription.value = originalPromptDescription.value
   localCustomPromptDescriptionEnabled.value = originalPromptDescriptionEnabled.value
-  localCustomPromptCategory.value = originalPromptCategory.value
-  localCustomPromptCategoryEnabled.value = originalPromptCategoryEnabled.value
 }
 
 const loadPrompts = async () => {
@@ -521,36 +461,11 @@ const loadPrompts = async () => {
   
   const result = await getAISettings()
   if (result.success) {
-    localCustomPrompt.value = result.customPrompt || ''
-    localCustomPromptEnabled.value = result.customPromptEnabled || false
     localCustomPromptDescription.value = result.customPromptDescription || ''
     localCustomPromptDescriptionEnabled.value = result.customPromptDescriptionEnabled || false
-    localCustomPromptCategory.value = result.customPromptCategory || ''
-    localCustomPromptCategoryEnabled.value = result.customPromptCategoryEnabled || false
-    originalPrompt.value = localCustomPrompt.value
-    originalPromptEnabled.value = localCustomPromptEnabled.value
     originalPromptDescription.value = localCustomPromptDescription.value
     originalPromptDescriptionEnabled.value = localCustomPromptDescriptionEnabled.value
-    originalPromptCategory.value = localCustomPromptCategory.value
-    originalPromptCategoryEnabled.value = localCustomPromptCategoryEnabled.value
   }
-}
-
-const fillExampleTemplate = () => {
-  localCustomPrompt.value = `为以下书签生成简洁的中文描述：
-
-名称：{name}
-链接：{url}
-
-要求：
-1. 使用简体中文
-2. 一句话说明网站功能，20字以内
-3. 直接返回描述，不要引号
-
-示例：
-- GitHub → 全球最大的代码托管平台
-- 知乎 → 中文互联网问答社区`
-  toastSuccess('已填充示例模板')
 }
 
 const fillDescriptionTemplate = () => {
@@ -569,29 +484,6 @@ const fillDescriptionTemplate = () => {
 - 知乎 → 中文互联网高质量问答社区
 - MDN Web Docs → Web 技术权威文档和学习资源`
   toastSuccess('已填充书签描述示例模板')
-}
-
-const fillCategoryTemplate = () => {
-  localCustomPromptCategory.value = `你是一个书签分类助手，根据书签信息推荐最合适的分类。
-
-书签信息：
-名称：{name}
-链接：{url}
-描述：{description}
-
-可选分类列表（ID: 分类名称或路径）：
-{categories}
-
-要求：
-1. 仔细分析书签的名称、URL 和描述
-2. 从可选分类中选择最匹配的一个分类 ID
-3. 用简体中文说明推荐理由（一句话）
-4. 返回 JSON 格式：{"categoryId": 分类ID数字, "reason": "推荐理由"}
-
-示例：
-- 对于 GitHub 项目链接，如果有"开发工具"或"编程"分类，优先选择
-- 对于技术文档，如果有"学习资源"或"文档"分类，优先选择`
-  toastSuccess('已填充分类推荐示例模板')
 }
 
 onMounted(async () => {
@@ -687,6 +579,78 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
+.api-key-input-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.api-key-input-wrapper .setting-input {
+  flex: 1;
+}
+
+.btn-toggle-visibility {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-toggle-visibility:hover:not(:disabled) {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.05);
+}
+
+.btn-toggle-visibility:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-toggle-visibility svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+.icon-eye {
+  display: block;
+}
+
+.icon-eye-off {
+  display: block;
+}
+
+.icon-check {
+  color: #16a34a;
+}
+
+.icon-error {
+  color: #dc2626;
+}
+
+.icon-loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .setting-note {
   margin-top: var(--space-2);
   font-size: var(--text-xs);
@@ -716,6 +680,22 @@ onMounted(async () => {
 .setting-locked svg {
   flex-shrink: 0;
   stroke-width: 2;
+}
+
+.setting-success {
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.setting-error {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
 }
 
 .status-display {

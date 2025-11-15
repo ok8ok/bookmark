@@ -162,12 +162,8 @@ export function useAI() {
           authPrefix: result.authPrefix !== undefined ? result.authPrefix : 'Bearer ',
           hasApiKey: !!result.hasApiKey,
           lockedFields: result.lockedFields || {},
-          customPromptEnabled: result.customPromptEnabled || false,
-          customPrompt: result.customPrompt || '',
           customPromptDescriptionEnabled: result.customPromptDescriptionEnabled || false,
-          customPromptDescription: result.customPromptDescription || '',
-          customPromptCategoryEnabled: result.customPromptCategoryEnabled || false,
-          customPromptCategory: result.customPromptCategory || ''
+          customPromptDescription: result.customPromptDescription || ''
         }
       }
       return { success: false, error: result.error || '获取失败' }
@@ -176,6 +172,28 @@ export function useAI() {
         return { success: false, error: '登录已过期，请重新登录' }
       }
       return { success: false, error: '网络错误' }
+    }
+  }
+
+  const verifyApiKey = async (apiKey, baseUrl, model) => {
+    try {
+      const response = await apiRequest('/api/ai/verify', {
+        method: 'POST',
+        body: JSON.stringify({ apiKey, baseUrl, model })
+      })
+      
+      const result = await response.json()
+      return { 
+        success: result.success, 
+        valid: result.valid, 
+        message: result.message 
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        valid: false, 
+        message: error.message || '验证失败' 
+      }
     }
   }
 
@@ -190,6 +208,7 @@ export function useAI() {
     batchGenerateDescriptions,
     batchClassify,
     saveAISettings,
-    getAISettings
+    getAISettings,
+    verifyApiKey
   }
 }

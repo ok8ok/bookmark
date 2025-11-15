@@ -92,6 +92,46 @@
       <div class="form-hint">在顶部显示搜索功能</div>
     </div>
     
+    <!-- 搜索引擎列表开关 -->
+    <div v-if="showSearch" class="form-group">
+      <label class="form-label">搜索引擎列表</label>
+      <div class="form-row">
+        <span class="form-text">{{ enabledSearchEnginesPanel ? '已开启' : '已关闭' }}</span>
+        <label class="switch">
+          <input 
+            type="checkbox" 
+            :checked="enabledSearchEnginesPanel"
+            @change="toggleSearchEnginesPanel"
+          >
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="form-hint">在搜索栏中显示快速搜索引擎列表</div>
+    </div>
+    
+    <!-- 搜索引擎配置 -->
+    <div v-if="showSearch && enabledSearchEnginesPanel" class="form-group">
+      <label class="form-label">快速搜索引擎</label>
+      <div class="form-hint" style="margin-bottom: 0.75rem;">选择要在搜索栏中显示的搜索引擎</div>
+      <div class="engines-grid">
+        <label 
+          v-for="engine in allEngines" 
+          :key="engine.id"
+          class="engine-checkbox"
+        >
+          <input 
+            type="checkbox"
+            :checked="enabledEngines.includes(engine.id)"
+            @change="toggleEngine(engine.id)"
+          />
+          <span class="engine-label">
+            <span class="engine-icon">{{ engine.icon }}</span>
+            {{ engine.name }}
+          </span>
+        </label>
+      </div>
+    </div>
+    
     <!-- 隐藏空分类 -->
     <div class="form-group">
       <label class="form-label">隐藏空分类</label>
@@ -215,7 +255,8 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, computed } from 'vue'
+import { useSearchEngines } from '../../composables/useSearchEngines'
 
 const props = defineProps({
   themeMode: String,
@@ -241,6 +282,10 @@ const emit = defineEmits([
   'updateWallpaperApi',
   'setDisplayMode'
 ])
+
+const { SEARCH_ENGINES, enabledEngines, enabledSearchEnginesPanel, toggleEngine, toggleSearchEnginesPanel } = useSearchEngines()
+
+const allEngines = computed(() => SEARCH_ENGINES)
 
 const showApiDialog = ref(false)
 const apiInput = ref('')
@@ -648,5 +693,53 @@ html.dark .api-dialog {
 
 .switch:hover input:checked + .slider {
   box-shadow: inset 0 2px 4px rgba(99, 102, 241, 0.4);
+}
+
+.engines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.engine-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+}
+
+.engine-checkbox:hover {
+  border-color: var(--primary);
+  background: var(--bg-hover);
+}
+
+.engine-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.engine-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.engine-icon {
+  font-size: 1.125rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

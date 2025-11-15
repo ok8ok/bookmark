@@ -32,8 +32,7 @@ export async function onRequestPost(context) {
       .map(cat => `${cat.id}: ${cat.path || cat.name}`)
       .join('\n')
 
-    // 默认 Prompt（用于分类推荐）
-    const defaultPrompt = `You are helping to organize bookmarks into categories. Choose the most suitable existing category ID based on the bookmark information.
+    const promptTemplate = `You are helping to organize bookmarks into categories. Choose the most suitable existing category ID based on the bookmark information.
 
 Bookmark:
 - Name: {name}
@@ -44,22 +43,6 @@ Existing categories (ID: Name or path):
 {categories}
 
 Return a JSON object with the fields "categoryId" (must be one of the provided IDs) and "reason" (a short explanation in the same language as the bookmark name).`
-
-    // 获取自定义 Prompt 配置和开关状态（使用分类专用提示词）
-    const settingsResults = await env.DB.prepare(
-      'SELECT key, value FROM settings WHERE key IN (?, ?)'
-    ).bind('ai_custom_prompt_category', 'ai_custom_prompt_category_enabled').all()
-    
-    const settings = {}
-    settingsResults.results.forEach(row => {
-      settings[row.key] = row.value
-    })
-    
-    const customPromptEnabled = settings.ai_custom_prompt_category_enabled === 'true'
-    const customPrompt = settings.ai_custom_prompt_category
-    const promptTemplate = (customPromptEnabled && customPrompt && customPrompt.trim())
-      ? customPrompt
-      : defaultPrompt
 
     // 替换变量
     const prompt = promptTemplate

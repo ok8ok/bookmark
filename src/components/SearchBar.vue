@@ -90,23 +90,52 @@
         找到 <strong>{{ filteredBookmarks.length }}</strong> 个书签
       </span>
     </div>
+
+    <!-- 快速搜索引擎 -->
+    <Transition name="slide-down">
+      <div v-if="query && showEngines && enabledSearchEnginesPanel && availableEngines.length > 0" class="search-engines">
+        <div class="engines-header">
+          <span class="engines-label">快速搜索：</span>
+        </div>
+        <div class="engines-list">
+          <button
+            v-for="engine in availableEngines"
+            :key="engine.id"
+            class="engine-btn"
+            :title="engine.name"
+            @click="searchWithEngine(engine.id)"
+          >
+            <span class="engine-icon">{{ engine.icon }}</span>
+            <span class="engine-name">{{ engine.name }}</span>
+          </button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useBookmarks } from '../composables/useBookmarks'
+import { useSearchEngines } from '../composables/useSearchEngines'
 import { buildCategoryTree, getCategoryPath } from '../utils/categoryTree'
 import { debounce } from '../utils/helpers'
 
 const emit = defineEmits(['scrollToBookmark'])
 
 const { searchQuery, searchCategoryId, categories, filteredBookmarks, bookmarks } = useBookmarks()
+const { getAvailableEngines, openSearchEngine, enabledSearchEnginesPanel } = useSearchEngines()
 const query = ref('')
 const selectedCategoryId = ref(null)
 const showFilter = ref(false)
 const showResults = ref(false)
+const showEngines = ref(false)
 const resultsPanel = ref(null)
+
+// 可用搜索引擎
+const availableEngines = computed(() => {
+  return getAvailableEngines()
+})
 
 // 分类选项
 const categoryOptions = computed(() => {
@@ -160,6 +189,7 @@ const handleSearch = debounce(() => {
   searchQuery.value = query.value
   if (query.value) {
     showResults.value = true
+    showEngines.value = true
   }
 }, 300)
 
@@ -173,12 +203,19 @@ const clearSearch = () => {
   searchQuery.value = ''
   searchCategoryId.value = null
   showResults.value = false
+  showEngines.value = false
 }
 
 // 点击搜索结果项，滚动到对应书签
 const handleResultClick = (bookmark) => {
   emit('scrollToBookmark', bookmark)
   showResults.value = false
+}
+
+// 使用搜索引擎搜索
+const searchWithEngine = (engineId) => {
+  openSearchEngine(engineId, query.value)
+  showEngines.value = false
 }
 
 // 监听搜索结果变化，自动滚动到第一个匹配项
@@ -483,6 +520,76 @@ html.dark .search-results {
 .result-count strong {
   color: var(--primary);
   font-weight: 600;
+}
+
+/* 搜索引擎快速搜索 */
+.search-engines {
+  padding: 0.875rem 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+html.dark .search-engines {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.engines-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.engines-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.engines-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.engine-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.engine-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.engine-btn:active {
+  transform: translateY(0);
+}
+
+.engine-icon {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.engine-name {
+  font-size: 0.85rem;
 }
 
 /* 动画 */
