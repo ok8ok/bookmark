@@ -1,11 +1,14 @@
+# ⚠️ 重要说明：此文件仅用于开发环境
+# 
 name = "bookmark-manager"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = "dist"
-
+#
+# D1 数据库配置（必须）
 [[d1_databases]]
 binding = "DB"
 database_name = "bookmark-db"
-database_id = "YOUR_DATABASE_ID_HERE"  # 替换为你的数据库 ID
+database_id = "YOUR_DATABASE_ID_HERE"  # 替换为你的 D1 数据库 ID
 
 # R2 存储桶配置（用于备份功能，可选）
 #
@@ -13,12 +16,10 @@ database_id = "YOUR_DATABASE_ID_HERE"  # 替换为你的数据库 ID
 #binding = "BACKUP_BUCKET"
 #bucket_name = "bookmark-backups"
 #
-# 注意：敏感的环境变量（如密码、密钥）应该在 Cloudflare Pages Dashboard 中设置
-# 而不是写在这个配置文件中！
-# 前往 Pages 项目 > Settings > Environment variables 手动添加：
-# - ADMIN_USERNAME
-# - ADMIN_PASSWORD  
-# - JWT_SECRET
+# 环境变量（必须）
+# - ADMIN_USERNAME          # 管理员用户名，用于登录管理后台
+# - ADMIN_PASSWORD          # 管理员密码，用于登录管理后台
+# - JWT_SECRET              # JWT 密钥，用于生成登录 token，建议使用至少32位的随机字符串
 # 
 # AI 功能配置（可选，也可以在设置界面中配置）：
 # - OPENAI_API_KEY          # OpenAI API Key（必须，如果不在设置中配置）
