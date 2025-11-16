@@ -8,18 +8,20 @@
   >
     <div class="sidebar-inner">
       <div class="sidebar-header">
-        <h3 class="sidebar-title">分类</h3>
-        <button
-          class="sidebar-close"
-          type="button"
-          @click="$emit('toggle')"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
+         <div class="sidebar-header-title">
+           <h2 class="sidebar-app-title">{{ customTitle }}</h2>
+         </div>
+         <button
+           class="sidebar-close"
+           type="button"
+           @click="$emit('toggle')"
+         >
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+             <line x1="18" y1="6" x2="6" y2="18" />
+             <line x1="6" y1="6" x2="18" y2="18" />
+           </svg>
+         </button>
+       </div>
 
       <div v-if="!categories.length" class="sidebar-empty">暂无分类</div>
 
@@ -35,7 +37,7 @@
               class="category-button"
               @click="$emit('select', 'all')"
             >
-              <span class="category-name">📚 全部书签</span>
+              <span class="category-name">全部书签</span>
               <span class="category-count">
                 {{ totalBookmarkCount }}
               </span>
@@ -108,6 +110,10 @@ const props = defineProps({
   isBatchMode: {
     type: Boolean,
     default: false
+  },
+  customTitle: {
+    type: String,
+    default: ''
   }
 })
 
@@ -169,17 +175,35 @@ html.dark .category-sidebar {
 }
 
 .sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-}
+   display: flex;
+   align-items: flex-start;
+   justify-content: space-between;
+   padding: 1rem 1.25rem;
+   gap: 0.5rem;
+ }
 
-.sidebar-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--text);
-}
+ .sidebar-header-title {
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+   gap: 0.25rem;
+ }
+
+ .sidebar-app-title {
+   font-size: 1.25rem;
+   font-weight: 700;
+   color: var(--text);
+   margin: 0;
+   line-height: 1.2;
+   word-break: break-word;
+ }
+
+ .sidebar-section-title {
+   font-size: 0.9rem;
+   font-weight: 600;
+   color: var(--text-secondary);
+   margin: 0;
+ }
 
 .sidebar-close {
   background: transparent;

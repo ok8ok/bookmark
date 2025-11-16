@@ -355,15 +355,8 @@ html.dark .app-header {
 }
 
 .app-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-/* Efficient Mode - Compact App Title */
-.app-header.efficient-mode .app-title {
-  font-size: 1.25rem;
-}
+   display: none;
+ }
 
 /* Header 文字按钮样式 */
 .header-text-btn {

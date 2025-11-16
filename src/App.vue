@@ -3,24 +3,22 @@
     <!-- Header -->
     <header class="app-header" :class="{ 'efficient-mode': displayMode === 'efficient' }">
       <div class="header-content">
-        <!-- 左上角：只显示标题 -->
-        <div class="header-left">
-          <h1 class="app-title">{{ customTitle }}</h1>
-        </div>
-        
-        <!-- 右上角：操作按钮 -->
-        <div class="header-right">
-          <!-- 分类汉堡菜单 - 始终在右上角 -->
-          <button 
-            v-if="categories.length > 0"
-            class="sidebar-toggle-btn" 
-            @click="sidebarOpen = !sidebarOpen"
-            title="切换分类侧边栏"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M3 12h18M3 6h18M3 18h18"/>
-            </svg>
-          </button>
+         <!-- 左上角：汉堡菜单按钮 -->
+         <div class="header-left">
+           <button
+             v-if="categories.length > 0"
+             class="sidebar-toggle-btn"
+             @click="sidebarOpen = !sidebarOpen"
+             title="切换分类侧边栏"
+           >
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+               <path d="M3 12h18M3 6h18M3 18h18"/>
+             </svg>
+           </button>
+         </div>
+
+         <!-- 右上角：操作按钮 -->
+         <div class="header-right">
           
           <!-- 未登录状态：显示登录按钮 -->
           <button 
@@ -144,25 +142,26 @@
         ></div>
         
         <!-- Category Sidebar -->
-        <CategorySidebar
-          :categories="categories"
-          :bookmarkCountByCategory="bookmarkCountByCategory"
-          :totalBookmarkCount="totalBookmarkCount"
-          :selectedCategoryId="selectedCategoryId"
-          :selectedCategoryIds="selectedCategoryIds"
-          :is-open="sidebarOpen"
-          :is-desktop="isDesktop"
-          :is-edit-mode="isEditMode"
-          :is-batch-mode="isBatchMode"
-          @toggle="sidebarOpen = !sidebarOpen"
-          @select="handleSelectCategory"
-          @toggle-category-selection="handleToggleCategorySelection"
-          @add-subcategory="handleAddSubcategory"
-          @add-bookmark="handleAddBookmarkToCategory"
-          @edit-category="handleEditCategory"
-          @delete-category="handleDeleteCategory"
-          @reorder-category="handleReorderCategory"
-        />
+         <CategorySidebar
+           :categories="categories"
+           :bookmarkCountByCategory="bookmarkCountByCategory"
+           :totalBookmarkCount="totalBookmarkCount"
+           :selectedCategoryId="selectedCategoryId"
+           :selectedCategoryIds="selectedCategoryIds"
+           :is-open="sidebarOpen"
+           :is-desktop="isDesktop"
+           :is-edit-mode="isEditMode"
+           :is-batch-mode="isBatchMode"
+           :custom-title="customTitle"
+           @toggle="sidebarOpen = !sidebarOpen"
+           @select="handleSelectCategory"
+           @toggle-category-selection="handleToggleCategorySelection"
+           @add-subcategory="handleAddSubcategory"
+           @add-bookmark="handleAddBookmarkToCategory"
+           @edit-category="handleEditCategory"
+           @delete-category="handleDeleteCategory"
+           @reorder-category="handleReorderCategory"
+         />
         
         <!-- Bookmarks Content -->
         <div class="bookmarks-area" :class="{ 'efficient-mode': displayMode === 'efficient' }">
