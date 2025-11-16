@@ -78,11 +78,11 @@
 - 进入数据库 > `Console`，复制 `schema.sql` 内容并执行
 
 
-**重要：获取数据库 ID**
+**重要：配置 wrangler.toml**
+- 首次部署时，需要从 `wrangler.toml.example` 复制并创建 `wrangler.toml` 文件：
 - 创建数据库后，在数据库详情页面可以看到 `Database ID`
-- 复制这个 ID，替换到 `wrangler.toml` 文件中
-- 将第8行的 `database_id` 替换为你刚创建的数据库 ID
-- 提交并推送到你的 GitHub 仓库
+- 编辑 `wrangler.toml` 文件，将第8行的 `database_id` 替换为你刚创建的数据库 ID
+- ⚠️ **注意**：`wrangler.toml` 不会被 Git 跟踪，所以同步代码时不会覆盖你的配置
 
 ### 2. 部署 Pages 项目
 - Fork [本仓库](https://github.com/deerwan/nav) 到你的 GitHub
@@ -105,6 +105,7 @@
 **注意：** 如果绑定失败，请确保：
 - 数据库名称与 `wrangler.toml` 中的 `database_name` 一致
 - 数据库 ID 已正确更新到 `wrangler.toml` 文件中
+- 如果还没有 `wrangler.toml` 文件，请从 `wrangler.toml.example` 复制并配置
 
 ### 4. 配置环境变量
 
@@ -168,6 +169,7 @@
    - 点击 `Create bucket`，名称：`bookmark-backups`
 
 2. **取消 `wrangler.toml` 中 R2 配置的注释**
+   - 如果还没有 `wrangler.toml` 文件，请从 `wrangler.toml.example` 复制并配置
    - 编辑 `wrangler.toml` 文件
    - 取消第 12-14 行的注释：
 
@@ -178,7 +180,7 @@
      ```
 
 3. **重试部署**
-   - 提交更改并推送到 GitHub
+   - 提交更改并推送到 GitHub（注意：`wrangler.toml` 不会被提交，因为它在 `.gitignore` 中）
    - 或在 Cloudflare Pages 的 `Deployments` 页面手动重试部署
 
 **备份功能特性**：

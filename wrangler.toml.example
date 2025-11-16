@@ -5,7 +5,7 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "bookmark-db"
-database_id = "9dbcf51d-18cc-4808-8509-8cb1f147ea2a"
+database_id = "YOUR_DATABASE_ID_HERE"  # 替换为你的数据库 ID
 
 # R2 存储桶配置（用于备份功能，可选）
 #
@@ -26,3 +26,4 @@ database_id = "9dbcf51d-18cc-4808-8509-8cb1f147ea2a"
 # - OPENAI_MODEL            # 模型名称（可选，默认 gpt-4o-mini）
 # - OPENAI_AUTH_HEADER      # 认证 Header 名称（可选，默认 Authorization）
 # - OPENAI_AUTH_PREFIX      # 认证前缀（可选，默认 "Bearer "，留空表示不添加前缀）
+

@@ -32,3 +32,4 @@ images/.DS_Store
 # Wrangler
 .wrangler/
 wrangler.toml.backup
+wrangler.toml
